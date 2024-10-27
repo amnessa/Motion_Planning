@@ -56,9 +56,10 @@ function [x_path, y_path] = astar_tangent_bug_planner(qstart, qgoal, use_tangent
             neighbor = current_node + MOVE * directions(i, :);
             neighbor_key = pos_to_key(neighbor);
             
+            % Skip if neighbor is in closed set or blocked by an obstacle
             if node_in_set(closed_set, neighbor) || is_obstacle(current_node, directions(i, :), MOVE)
-                % Ensure tangent following is not triggered at the starting position
-                if use_tangent_following && norm(current_node - qstart) > MOVE
+                % Check if tangent following should be activated
+                if use_tangent_following
                     disp('Obstacle detected, switching to tangent boundary following.');
                     new_position = follow_boundary_tangentially(current_node, qgoal, MOVE);
                     if ~isempty(new_position)
@@ -68,7 +69,6 @@ function [x_path, y_path] = astar_tangent_bug_planner(qstart, qgoal, use_tangent
                 end
                 continue;
             end
-
             
             % Tentative g_score for the neighbor
             tentative_g_score = g_score(current_key) + MOVE;

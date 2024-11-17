@@ -1,18 +1,25 @@
-% run_potential_field.m - Function to run potential field planner
-function results = run_potential_field(start, goal, obstacles, world_center, world_radius)
-    % Parameters
-    dt = 0.01;  % Time step
-    max_steps = 1000;  % Maximum number of steps
+% run_potential_field.m
+function results = run_potential_field(start, goal, obstacles, world_center, world_radius, k_att, k_rep, rho_0, k_bound, rho_b)
+    % ODE45 setup
+    tspan = linspace(0, 30, 1000);  % More time points for smoother path
+    options = odeset('RelTol', 1e-2, 'AbsTol', 1e-2, 'MaxStep', 0.01, 'InitialStep', 0.005, 'Events', @(t,q) collision_event(t,q,obstacles));
+   
+    % Define ODE function with closure over parameters
+    odefun = @(t,q) potential_fields_wrapper(t, q, goal, obstacles, world_center, world_radius, k_att, k_rep, rho_0, k_bound, rho_b);
     
-    % Initialize
-    path = zeros(max_steps, 2);
-    path(1,:) = start;
+    % Run integration
+    [t, q] = ode45(odefun, tspan, start, options);
     
-    % ODE45 implementation
-    tspan = [0 10];
-    options = odeset('RelTol', 1e-6, 'AbsTol', 1e-6);
-    [t, q] = ode45(@(t,q) -potential_field(q, goal, obstacles, world_center, world_radius), ...
-                    tspan, start, options);
-    
-    results = struct('path', q, 'time', t);
+    % Store results
+    results.time = t;
+    results.path = q;
+    results.type = 'Potential Fields';
+end
+
+function dq = potential_fields_wrapper(t, q, goal, obstacles, world_center, world_radius, k_att, k_rep, rho_0, k_bound, rho_b)
+    if norm(q - goal) < 0.1
+        dq = [0; 0];
+    else
+        dq = -potential_fields(q, goal, obstacles, world_center, world_radius, k_att, k_rep, rho_0, k_bound, rho_b);
+    end
 end

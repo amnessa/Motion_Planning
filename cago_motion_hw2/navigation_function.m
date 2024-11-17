@@ -1,22 +1,43 @@
-% navigation_function.m - Implementation of navigation function approach
-function [phi_grad] = navigation_function(q, goal, obstacles, world_center, world_radius)
-    % Parameters
-    kappa = 10.0;  % Navigation function gain
+% navigation_function.m
+function [grad] = navigation_function(q, goal, obstacles, world_center, world_radius, kappa)
+    % Ensure vectors are column vectors
+    q = q(:);
+    goal = goal(:);
+    world_center = world_center(:);
     
-    % Goal function (gamma)
-    gamma = norm(q - goal)^2;
+    % Compute gamma (goal function)
+    gamma = sum((q - goal).^2);
     
-    % Obstacle function (beta)
-    beta_0 = world_radius^2 - norm(q - world_center)^2;  % Boundary
+    % Compute beta (obstacle function)
+    beta_0 = world_radius^2 - sum((q - world_center).^2);  % Boundary
     beta = beta_0;
-    for i = 1:length(obstacles.center)
-        beta = beta * (norm(q - obstacles.center{i})^2 - obstacles.radius{i}^2);
+    
+    % Multiply beta by obstacle functions
+    for i = 1:length(obstacles)
+        obstacle_center = obstacles{i}.center;
+        obstacle_radius = obstacles{i}.radius;
+        beta = beta * (sum((q - obstacle_center).^2) - obstacle_radius^2);
     end
     
-    % Navigation function
-    phi = (gamma^kappa / (gamma^kappa + beta))^(1/kappa);
+    % Gradient computation
+    grad_gamma = 2 * (q - goal);
     
-    % Compute gradient (implementation needed)
-    phi_grad = zeros(size(q));  % Placeholder
-    % TODO: Implement gradient computation
+    % Gradient of beta
+    grad_beta = -2 * (q - world_center) * beta_0;  % Boundary gradient
+    
+    % Obstacle gradients
+    for i = 1:length(obstacles)
+        obstacle_center = obstacles{i}.center;
+        obstacle_radius = obstacles{i}.radius;
+        
+        beta_i = sum((q - obstacle_center).^2) - obstacle_radius^2;
+        grad_beta_i = 2 * (q - obstacle_center);
+        
+        grad_beta = grad_beta * beta_i + beta * grad_beta_i;
+    end
+    
+    % Complete gradient
+    numerator = kappa * gamma^(kappa-1) * beta * grad_gamma - gamma^kappa * grad_beta;
+    denominator = (gamma^kappa + beta)^2;
+    grad = numerator ./ denominator;
 end

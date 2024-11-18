@@ -1,19 +1,19 @@
 % main.m
 clear all; close all; clc;
 
-% Configuration parameters
-world_radius = 60;  % 5x bigger world
+% World and obstacle parameters
+world_radius = 60;
 world_center = [0; 0];
-start_pos = [-35; -35];  % 5x bigger start position
-goal_pos = [30; 40];    % 5x bigger goal position
+start_pos = [-35; -35];
+goal_pos = [30; 40];
 
-% Define larger obstacles with more spacing
+% Define obstacles with spacing
 obstacles = [
-    10, 10, 7.5;    % [x, y, radius]
+    10, 10, 7.0;    % [x, y, radius]
     -15, 5, 6.0;
-    0, -10, 5.0;
-    20, -15, 6.5;
-    -10, 20, 5.5
+    %0, -10, 5.0;
+    %20, -15, 6.5;
+    %-10, 20, 5.5
 ];
 
 % Convert obstacle centers to column vectors for consistency
@@ -22,18 +22,18 @@ for i = 1:size(obstacles, 1)
     obstacles_formatted{i} = struct('center', obstacles(i,1:2)', 'radius', obstacles(i,3));
 end
 
-% Control parameters adjusted for larger scale
-k_att = 0.3;
-k_rep = 150.0;
-k_bound = 300.0;
-rho_0 = 20.0;      % 5x bigger influence radius
-rho_b = 15.0;      % 5x bigger boundary influence
+% Influence radii
+obstacle_influence_radius = world_radius * 0.1;  % 10% of world radius
 
-% Navigation Function
+% Enhanced parameters
+epsilon_q = 80.0;    % goal attraction parameter
+epsilon_r = 10.0;     % obstacle repulsion parameter
+
+% Parameter for navigation function
 kappa = 10.0;  % Tuning parameter
 
-% Run both planners
-results_potential = run_potential_field(start_pos, goal_pos, obstacles_formatted, world_center, world_radius, k_att, k_rep, rho_0, k_bound, rho_b);
+% Run planner
+results_potential = run_potential_field(start_pos, goal_pos, obstacles_formatted, world_center, world_radius, epsilon_q, epsilon_r);
 results_navigation = run_navigation_function(start_pos, goal_pos, obstacles_formatted, world_center, world_radius, kappa);
 
 % Visualize results

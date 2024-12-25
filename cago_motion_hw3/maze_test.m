@@ -5,11 +5,11 @@ clc
 %% RUN PRM FUNCTION
 
 % q_init and q_goal now include base position
-q_init = [3; 8; 0; pi/4; -pi/4];
-q_goal = [30; 8; pi/2; -pi/4; pi/4];
+q_init = [-2; 8; 0; pi/4; -pi/4];
+q_goal = [20; 27; pi/2; -pi/4; pi/4];
 
-n = 600; K = 20;
-O = {[5 35 35 5; 10 10 12 12], [5 7 7 5; 10 30 30 10], [10 12 12 10; 15 15 25 25], [20 22 22 20; 5 5 20 20]};
+n = 1000; K = 10;
+O = {[5 30 30 5; 10 10 12 12], [-5 -5 5 5; 18 20 20 18], [10 12 12 10; 15 15 25 25], [20 22 22 20; 5 5 20 20],[12 12 0 0;25 27 27 25]};
 
 r = 2; % This is the length of each link of the robot
 

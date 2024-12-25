@@ -7,10 +7,10 @@ clc
 % q_init and q_goal now include base position
 q_init = [-5; -5; 0; 2*pi-.1; 0.1];
 q_goal = [18; 25; pi/2; pi/4; 2*pi - pi/4];
-n = 600; K = 20;
+n = 1000; K = 10;
 O = {};
-for i = 1:20
-    center = [randi(25); randi(25)];
+for i = 1:30
+    center = [2+randi(25); 2+randi(25)];
     radius = 2;
     theta = linspace(0, 2*pi, 50);
     O{end+1} = [center(1) + radius*cos(theta); center(2) + radius*sin(theta)];

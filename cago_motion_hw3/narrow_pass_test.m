@@ -5,12 +5,12 @@ clc
 %% RUN PRM FUNCTION
 
 % q_init and q_goal now include base position
-q_init = [0; 0; 0; 2*pi-.1; 0.1];
-q_goal = [10; 10; pi/2; pi/4; 2*pi - pi/4];
-n = 600; K = 20;
-O = {[5 15 15 5; 5 5 10 10], [25 35 35 25; 5 5 10 10]};
+q_init = [-5; 15; 0; pi/4; -pi/4];
+q_goal = [20; 18; pi/2; -pi/4; pi/4];
+n = 1000; K = 10;
+O = {[5 5 10 10 ;-5 17 17 -5], [5 5 10 10;20 35 35 20 ]};
 
-r = 4; % This is the length of each link of the robot
+r = 2; % This is the length of each link of the robot
 
 % Define workspace limits for the base position
 workspace_limits = [30; 30]; % Example limits for x and y

@@ -1,8 +1,10 @@
 function make_video(q_init, q_goal, O, r, path, type)
+
     % Plot the obstacles
     n_links = length(q_init) - 2;
     figure
-    axis([-n_links*r n_links*5 -n_links*r n_links*r])
+    %axis([-n_links*r n_links*5 -n_links*r n_links*r])
+    axis(30);
     for i=1:size(O,2)
         Cpatch=O{1,i};
         patch(Cpatch(1,:),Cpatch(2,:),'yellow')
@@ -36,9 +38,15 @@ function make_video(q_init, q_goal, O, r, path, type)
     hold on
     plot(p_goal(1),p_goal(2),'d','MarkerFaceColor','green')
     
+    % Initialize video
     myVideo = VideoWriter(strcat(type,'_', int2str(n_links), 'link')); % Open video file with name
     myVideo.FrameRate = 10;  % Set video frame rate
     open(myVideo)
+    
+    % Initialize base path plot
+    base_path_x = [];
+    base_path_y = [];
+
     l(1:n_links) = 0; % Create l to store the robot at each configuration
     hold on
     for i=1:size(path,2)-1
@@ -47,6 +55,14 @@ function make_video(q_init, q_goal, O, r, path, type)
         for t=0:0.05:1 % 21 steps for linear interpolation
             p = (1-t)*q + t*q_n; % Linear interpolation from current to next configuration
             base_pos = p(1:2);
+
+            % Store base position
+            base_path_x = [base_path_x, base_pos(1)];
+            base_path_y = [base_path_y, base_pos(2)];
+
+            % Plot paths
+            plot(base_path_x, base_path_y, 'b-', 'LineWidth', 2);
+            
             prev_node = base_pos;
             for j=1:n_links % Loop to plot each link in the manipulator
                 theta = mod(sum(p(3:j+2)), 2*pi);
@@ -54,6 +70,7 @@ function make_video(q_init, q_goal, O, r, path, type)
                 seg2= [prev_node next_node];
                 prev_node = next_node;
                 l(j) = line(seg2(1,1:2), seg2(2,1:2)); % Plot each link in this configuration
+                
             end
             pause(.05)
             frame = getframe(gcf); % Get frame

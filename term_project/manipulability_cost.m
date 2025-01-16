@@ -14,8 +14,15 @@ function cost = manipulability_cost(q, r)
 
     % Compute the Jacobian matrix
     for i = 1:n_links
-        J(1, i) = -sum(L(i:end) .* sin(cumsum(q(1:i))));
-        J(2, i) = sum(L(i:end) .* cos(cumsum(q(1:i))));
+        % Extract relevant joint angles as a row vector
+        q_segment = q(1:i).'; % Convert to row vector
+
+        % Use only the first i link lengths
+        L_segment = L(1:i);
+
+        % Compute Jacobian terms
+        J(1, i) = -sum(L_segment .* sin(cumsum(q_segment)));
+        J(2, i) = sum(L_segment .* cos(cumsum(q_segment)));
     end
 
     % Singular Value Decomposition

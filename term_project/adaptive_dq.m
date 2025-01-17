@@ -1,43 +1,43 @@
-function dq = adaptive_dq(q_nearest, q_goal, r, manipulability_cost_fn, epsilon_0, gamma, min_step)
-    % adaptive_dq - Computes the adaptive step size for RRT* based on manipulability and distance to goal
-    % 
-    % Inputs:
-    %   q_nearest: Current configuration (column vector)
-    %   q_goal: Goal configuration (column vector)
-    %   r: Link length (scalar)
-    %   manipulability_cost_fn: Handle to the manipulability cost function
-    %   epsilon_0: Base step size (scalar)
-    %   gamma: Scaling factor for adaptive step size (scalar)
-    %   min_step: Minimum allowable step size (scalar)
+function dq = adaptive_dq(q_near, q_goal, epsilon_0, gamma, min_step, r)
+    % adaptive_dq - Compute an adaptive step size based on alignment with manipulability and distance
     %
-    % Outputs:
+    % Inputs:
+    %   q_near: Current configuration (column vector)
+    %   q_goal: Goal configuration (column vector)
+    %   epsilon_0: Base step size (scalar)
+    %   gamma: Scaling factor for step size adjustment (scalar)
+    %   min_step: Minimum allowable step size (scalar)
+    %   r: Link length (used for manipulability measure)
+    %
+    % Output:
     %   dq: Adaptive step size (scalar)
 
-    % Compute manipulability cost for the current configuration
-    U_manipulability = manipulability_cost_fn(q_nearest, r);
-    
-    % Compute distance-to-goal potential
-    U_distance = norm(q_goal - q_nearest);
-    
-    % Combine potentials into a repulsive field
-    U = U_manipulability + U_distance;
-    
-    % Compute gradient of the potential field numerically
-    grad_U = zeros(size(q_nearest));
-    delta = 1e-5; % Small perturbation for numerical differentiation
-    for i = 1:length(q_nearest)
-        % Perturb each joint angle
-        q_perturbed = q_nearest;
-        q_perturbed(i) = q_perturbed(i) + delta;
-        
-        % Compute partial derivative
-        U_perturbed = manipulability_cost_fn(q_perturbed, r) + norm(q_goal - q_perturbed);
-        grad_U(i) = (U_perturbed - U) / delta;
+    % Compute manipulability gradient term
+    omega = manipulability_cost(q_near, r);
+    omega_star = 0.5; % Threshold manipulability
+    eta_omega = 0.02; % Strength of manipulability field
+    if omega <= omega_star
+        grad_omega = eta_omega * (1 / omega - 1 / omega_star) * (1 / omega^2);
+    else
+        grad_omega = 0;
     end
 
+    % Compute distance gradient term
+    dist = norm(q_goal - q_near);
+    d_star = 0.01; % Threshold distance
+    eta_dist = 0.005; % Strength of distance field
+    if dist <= d_star
+        grad_dist = eta_dist * (1 / dist - 1 / d_star) * (1 / dist^2);
+    else
+        grad_dist = 0;
+    end
+
+    % Total gradient
+    grad_total = grad_omega + grad_dist;
+
     % Compute adaptive step size
-    dq = epsilon_0 - gamma * norm(grad_U);
-    
+    dq = epsilon_0 - gamma * grad_total;
+
     % Enforce minimum step size
     dq = max(dq, min_step);
 end

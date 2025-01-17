@@ -31,6 +31,13 @@ function cost = manipulability_cost(q, r)
     % Extract singular values
     singular_values = diag(S);
 
+    % Check for rank-deficient Jacobian (singular configuration)
+    if rank(J) < 2
+        % If rank is less than 2, assign a very high cost
+        cost = 1e3;
+        return;
+    end
+
     % Smallest singular value indicates closeness to singularity
     manipulability_measure = min(singular_values);
 

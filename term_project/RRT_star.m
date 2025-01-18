@@ -16,6 +16,7 @@ function path = RRT_star(q_init, q_goal, O, r, epsilon_0, radius, beta, gamma, m
     parents = 0; % Root node has no parent
     costs = 0; % Cost to reach each node
     solved = false; % Stop condition
+    manipulability_costs = []; % Array to store all manipulability cost values
 
     iter = 0; % Iteration counter
     while iter < max_iter
@@ -43,6 +44,9 @@ function path = RRT_star(q_init, q_goal, O, r, epsilon_0, radius, beta, gamma, m
 
         % Compute cost for q_new
         manipulability_cost_new = manipulability_cost(q_new, r);
+        % Store the cost for analysis
+        manipulability_costs = [manipulability_costs, manipulability_cost_new];
+
         cost_new = beta * (costs(near_index) + norm(q_new - q_near)) + ...
                     (1 - beta) * manipulability_cost_new;
 
@@ -98,6 +102,12 @@ function path = RRT_star(q_init, q_goal, O, r, epsilon_0, radius, beta, gamma, m
 
     % Reconstruct the path
     if solved
+        if ~isempty(manipulability_costs)
+            avg_manipulability_cost = mean(manipulability_costs);
+            fprintf('Average Manipulability Cost: %.6f\n', avg_manipulability_cost);
+        else
+            fprintf('No manipulability costs collected.\n');
+        end
         path = build_path(children, parents, q_init, q_goal);
         path = fliplr(path); % Reverse path for start-to-goal order
     else

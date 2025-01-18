@@ -1,11 +1,5 @@
-function cost = manipulability_cost(q, r)
-    % Manipulability cost calculation for a 3+ link manipulator
-    % q: joint angles (column vector)
-    % r: link length (scalar, uniform for all links)
-
-    % Ensure q is a column vector
-    q = q(:);
-
+function [cost, singular_values] = manipulability_cost_debug(q, r)
+    q = q(:); % Ensure q is a column vector
     n_links = length(q);
     L = ones(1, n_links) * r; % Uniform link lengths
 
@@ -14,13 +8,8 @@ function cost = manipulability_cost(q, r)
 
     % Compute the Jacobian matrix
     for i = 1:n_links
-        % Extract relevant joint angles as a row vector
         q_segment = q(1:i).'; % Convert to row vector
-
-        % Use only the first i link lengths
         L_segment = L(1:i);
-
-        % Compute Jacobian terms
         J(1, i) = -sum(L_segment .* sin(cumsum(q_segment)));
         J(2, i) = sum(L_segment .* cos(cumsum(q_segment)));
     end
@@ -31,15 +20,8 @@ function cost = manipulability_cost(q, r)
     % Extract singular values
     singular_values = diag(S);
 
-    % Check for rank-deficient Jacobian (singular configuration)
-    if rank(J) < 2
-        % If rank is less than 2, assign a very high cost
-        cost = 1e3;
-        return;
-    end
-
-    % Smallest singular value indicates closeness to singularity
-    manipulability_measure = sqrt(det(J * J.'));
+    % Compute manipulability measure
+    manipulability_measure = min(singular_values);
 
     % Cost is inversely proportional to manipulability measure
     if manipulability_measure > 1e-3

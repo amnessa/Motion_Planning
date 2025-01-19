@@ -1,0 +1,32 @@
+function [cost, singular_values] = manipulability_cost_debug(q, r)
+    q = q(:); % Ensure q is a column vector
+    n_links = length(q);
+    L = ones(1, n_links) * r; % Uniform link lengths
+
+    % Initialize Jacobian matrix
+    J = zeros(2, n_links);
+
+    % Compute the Jacobian matrix
+    for i = 1:n_links
+        q_segment = q(1:i).'; % Convert to row vector
+        L_segment = L(1:i);
+        J(1, i) = -sum(L_segment .* sin(cumsum(q_segment)));
+        J(2, i) = sum(L_segment .* cos(cumsum(q_segment)));
+    end
+
+    % Singular Value Decomposition
+    [~, S, ~] = svd(J);
+
+    % Extract singular values
+    singular_values = diag(S);
+
+    % Compute manipulability measure
+    manipulability_measure = min(singular_values);
+
+    % Cost is inversely proportional to manipulability measure
+    if manipulability_measure > 1e-3
+        cost = 1 / manipulability_measure; % Avoid division by near-zero
+    else
+        cost = 1e3; % Assign a high cost near singularities
+    end
+end

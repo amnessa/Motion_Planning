@@ -13,11 +13,12 @@ function dq = adaptive_dq(q_near, q_goal, epsilon_0, gamma, min_step, r)
     %   dq: Adaptive step size (scalar)
 
     % Compute manipulability gradient term
-    omega = manipulability_cost(q_near, r);
-    omega_star = 0.5; % Threshold manipulability
-    eta_omega = 0.02; % Strength of manipulability field
+    omega = 1 / manipulability_cost(q_near, r); % Corrected measure
+    omega_star = 0.5; % Example threshold
+    eta_omega = 0.02;
+
     if omega <= omega_star
-        grad_omega = eta_omega * (1 / omega - 1 / omega_star) * (1 / omega^2);
+        grad_omega = eta_omega * (1/omega - 1/omega_star) * (1/omega^2);
     else
         grad_omega = 0;
     end

@@ -1,50 +1,26 @@
 function cost = manipulability_cost(q, r)
-    % Manipulability cost calculation for a 3+ link manipulator
-    % q: joint angles (column vector)
-    % r: link length (scalar, uniform for all links)
-
-    % Ensure q is a column vector
-    q = q(:);
-
+    q = q(:); % Ensure column vector
     n_links = length(q);
-    L = ones(1, n_links) * r; % Uniform link lengths
+    L = ones(n_links, 1) * r; % Link lengths
 
-    % Initialize Jacobian matrix
+    % Precompute cumulative angles for all joints
+    cumulative_angles = cumsum(q); % [θ1, θ1+θ2, ..., θ1+...+θn]
+
+    % Initialize Jacobian
     J = zeros(2, n_links);
 
-    % Compute the Jacobian matrix
     for i = 1:n_links
-        % Extract relevant joint angles as a row vector
-        q_segment = q(1:i).'; % Convert to row vector
-
-        % Use only the first i link lengths
-        L_segment = L(1:i);
-
-        % Compute Jacobian terms
-        J(1, i) = -sum(L_segment .* sin(cumsum(q_segment)));
-        J(2, i) = sum(L_segment .* cos(cumsum(q_segment)));
+        % For joint i, sum contributions from links i to end
+        links = i:n_links;
+        J(1, i) = -sum(L(links) .* sin(cumulative_angles(links)));
+        J(2, i) = sum(L(links) .* cos(cumulative_angles(links)));
     end
 
-    % Singular Value Decomposition
-    [~, S, ~] = svd(J);
-
-    % Extract singular values
-    singular_values = diag(S);
-
-    % Check for rank-deficient Jacobian (singular configuration)
+    % Compute manipulability measure
     if rank(J) < 2
-        % If rank is less than 2, assign a very high cost
-        cost = 1e3;
-        return;
-    end
-
-    % Smallest singular value indicates closeness to singularity
-    manipulability_measure = sqrt(det(J * J.'));
-
-    % Cost is inversely proportional to manipulability measure
-    if manipulability_measure > 1e-3
-        cost = 1 / manipulability_measure; % Avoid division by near-zero
+        cost = 1e3; % Singular configuration
     else
-        cost = 1e3; % Assign a high cost near singularities
+        manipulability_measure = sqrt(det(J * J'));
+        cost = 1 / max(manipulability_measure, 1e-3); % Avoid division by zero
     end
 end
